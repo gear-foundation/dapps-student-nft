@@ -50,6 +50,12 @@ pub enum StudentNftAction {
         lesson_id: LessonId,
         review: String,
     },
+    FinishCourse {
+        course_id: CourseId,
+    },
+    CompleteCourse {
+        course_id: CourseId,
+    },
 }
 
 #[derive(Debug, Clone, Encode, Decode, TypeInfo)]
@@ -83,6 +89,13 @@ pub enum StudentNftEvent {
         course_id: CourseId,
         lesson_id: LessonId,
         review: String,
+    },
+    CourseFinished {
+        course_id: CourseId,
+    },
+    CourseCompleted {
+        user: ActorId,
+        course_id: CourseId,
     },
     Error(String),
 }
@@ -174,6 +187,7 @@ pub struct Course {
     pub lessons: Vec<Lesson>,
     /// Identifier of associated `Emote` struct.
     pub emote_id: EmoteId,
+    pub is_finished: bool,
 }
 
 impl Course {
@@ -184,6 +198,7 @@ impl Course {
             description,
             lessons: Vec::new(),
             emote_id,
+            is_finished: false,
         }
     }
 }

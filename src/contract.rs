@@ -57,14 +57,11 @@ fn process_mint(student_nft: &mut StudentNFT, user: &ActorId) -> StudentNftEvent
         return StudentNftEvent::Error("Math overflow.".to_owned());
     };
 
-    if student_nft
-        .nft_owners
-        .insert(*user, next_nft_nonce)
-        .is_some()
-    {
+    if student_nft.nft_owners.contains_key(user) {
         return StudentNftEvent::Error("User already has student nft.".to_owned());
     }
 
+    student_nft.nft_owners.insert(*user, next_nft_nonce);
     student_nft.nft_nonce = next_nft_nonce;
     student_nft.nfts.insert(next_nft_nonce, Nft::new(user));
 
@@ -113,6 +110,10 @@ fn process_add_lesson(
     if let Some(course) = student_nft.courses.get_mut(&id) {
         if source != &course.owner {
             return StudentNftEvent::Error("Only owner can add more lessons.".to_owned());
+        }
+
+        if course.is_finished {
+            return StudentNftEvent::Error("Provided course is finished.".to_owned());
         }
 
         let Some(next_emote_nonce) = student_nft.emote_nonce.checked_add(1) else {
@@ -177,7 +178,7 @@ fn process_approve_hw(
 
         if let Some(lesson) = course.lessons.get(lesson_id as usize) {
             if !lesson.is_provide_hw {
-                return StudentNftEvent::Error("Provided lesson does not provide hw.".to_owned());
+                return StudentNftEvent::Error("Lesson does not provide hw.".to_owned());
             }
         } else {
             return StudentNftEvent::Error("Invalid lesson id.".to_owned());
@@ -209,6 +210,63 @@ fn process_approve_hw(
 
         actual_course.hws.push(hw.clone());
 
+        StudentNftEvent::HwApproved {
+            course_id,
+            nft_id,
+            hw,
+        }
+    } else {
+        StudentNftEvent::Error("Provided course does not exist.".to_owned())
+    }
+}
+
+fn process_finish_course(
+    student_nft: &mut StudentNFT,
+    source: &ActorId,
+    course_id: CourseId,
+) -> StudentNftEvent {
+    if let Some(course) = student_nft.courses.get_mut(&course_id) {
+        if source != &course.owner {
+            return StudentNftEvent::Error("Only owner can finish course.".to_owned());
+        }
+
+        if course.is_finished {
+            return StudentNftEvent::Error("Course is already finished.".to_owned());
+        }
+
+        course.is_finished = true;
+        StudentNftEvent::CourseFinished { course_id }
+    } else {
+        StudentNftEvent::Error("Provided course does not exist.".to_owned())
+    }
+}
+
+fn process_complete_course(
+    student_nft: &mut StudentNFT,
+    user: &ActorId,
+    course_id: CourseId,
+) -> StudentNftEvent {
+    if let Some(course) = student_nft.courses.get_mut(&course_id) {
+        if !course.is_finished {
+            return StudentNftEvent::Error("Course is not finished by owner.".to_owned());
+        }
+
+        let Some(nft_id) = student_nft.nft_owners.get(user) else {
+            return StudentNftEvent::Error("User does not have nft.".to_owned());
+        };
+
+        let Some(nft) = student_nft.nfts.get_mut(nft_id) else {
+            return StudentNftEvent::Error("Invalid nft id.".to_owned());
+        };
+
+        let Some(actual_course) = nft.actual_courses.iter_mut().find(|ac| ac.id == course_id) else {
+            return StudentNftEvent::Error("Course is not started by nft owner.".to_owned());
+        };
+
+        if actual_course.is_completed {
+            return StudentNftEvent::Error("Course is already completed.".to_owned());
+        }
+
         // List with id's of all lessons, which require hw
         let mut required_lessons_id: Vec<u64> = course
             .lessons
@@ -231,12 +289,12 @@ fn process_approve_hw(
 
         if required_lessons_id == actual_lessons_id {
             actual_course.is_completed = true;
-        }
-
-        StudentNftEvent::HwApproved {
-            course_id,
-            nft_id,
-            hw,
+            StudentNftEvent::CourseCompleted {
+                user: *user,
+                course_id,
+            }
+        } else {
+            StudentNftEvent::Error("Required hw's are not completed.".to_owned())
         }
     } else {
         StudentNftEvent::Error("Provided course does not exist.".to_owned())
@@ -353,6 +411,12 @@ extern "C" fn handle() {
             lesson_id,
             review,
         } => process_add_lesson_review(student_nft, &user, course_id, lesson_id, review),
+        StudentNftAction::FinishCourse { course_id } => {
+            process_finish_course(student_nft, &user, course_id)
+        }
+        StudentNftAction::CompleteCourse { course_id } => {
+            process_complete_course(student_nft, &user, course_id)
+        }
     };
 
     reply(result).expect("Failed to encode or reply with `StudentNftEvent`.");
