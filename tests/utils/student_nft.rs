@@ -2,168 +2,107 @@ use super::ADMIN;
 use gstd::prelude::*;
 use gtest::{Program, System};
 use student_nft_io::{
-    CourseId, EmoteAction, EmoteId, Lesson, LessonId, NftId, StudentNftAction, StudentNftEvent,
-    StudentNftInit, StudentNftState,
+    Collection, NftId, StudentNFTAction, StudentNFTEvent, StudentNFTInit, StudentNFTState,
+    UpdateAdminCommand,
 };
 
-pub trait StudentNft {
-    fn student_nft(system: &System) -> Program;
-    fn mint(&self, from: u64, error: bool);
-    fn create_course(&self, from: u64, name: &str, description: &str, error: bool);
-    fn start_course(&self, from: u64, course_id: CourseId, error: bool);
-    fn add_course_helper(&self, from: u64, course_id: CourseId, helper: u64, error: bool);
-    fn remove_course_helper(&self, from: u64, course_id: CourseId, helper: u64, error: bool);
-    fn add_lesson(&self, from: u64, course_id: CourseId, lesson: &Lesson, error: bool);
-    #[allow(clippy::too_many_arguments)]
-    fn approve_hw(
+pub trait StudentNFTMock {
+    fn student_nft(system: &System, name: String, description: String) -> Program;
+    fn mint(
+        &self,
+        from: u64,
+        name: String,
+        description: String,
+        media_url: String,
+        attrib_url: String,
+        error: bool,
+    );
+    fn update_metadata(
         &self,
         from: u64,
         nft_id: NftId,
-        course_id: CourseId,
-        lesson_id: LessonId,
-        solution_url: &str,
-        comment: Option<String>,
-        rate: u8,
+        maybe_media_url: Option<String>,
+        maybe_attrib_url: Option<String>,
         error: bool,
     );
-    fn emote(&self, from: u64, id: EmoteId, action: EmoteAction, error: bool);
-    fn add_lesson_review(
-        &self,
-        from: u64,
-        course_id: CourseId,
-        lesson_id: LessonId,
-        review: &str,
-        error: bool,
-    );
-    fn finish_course(&self, from: u64, course_id: CourseId, error: bool);
-    fn complete_course(&self, from: u64, course_id: CourseId, error: bool);
-    fn send_tx(&self, from: u64, action: StudentNftAction, error: bool);
-    fn get_state(&self) -> StudentNftState;
+    fn update_admin(&self, from: u64, admin: u64, command: UpdateAdminCommand, error: bool);
+    fn send_student_nft_tx(&self, from: u64, action: StudentNFTAction, error: bool);
+    fn get_state(&self) -> StudentNFTState;
 }
 
-impl StudentNft for Program<'_> {
-    fn student_nft(system: &System) -> Program {
+impl StudentNFTMock for Program<'_> {
+    fn student_nft(system: &System, name: String, description: String) -> Program {
         let student_nft = Program::current(system);
-        assert!(!student_nft.send(ADMIN, StudentNftInit {}).main_failed());
+        assert!(!student_nft
+            .send(
+                ADMIN,
+                StudentNFTInit {
+                    collection: Collection { name, description }
+                }
+            )
+            .main_failed());
 
         student_nft
     }
 
-    fn mint(&self, from: u64, error: bool) {
-        self.send_tx(from, StudentNftAction::Mint, error);
-    }
-
-    fn create_course(&self, from: u64, name: &str, description: &str, error: bool) {
-        self.send_tx(
+    fn mint(
+        &self,
+        from: u64,
+        name: String,
+        description: String,
+        media_url: String,
+        attrib_url: String,
+        error: bool,
+    ) {
+        self.send_student_nft_tx(
             from,
-            StudentNftAction::CreateCourse {
-                name: name.to_owned(),
-                description: description.to_owned(),
+            StudentNFTAction::Mint {
+                name,
+                description,
+                media_url,
+                attrib_url,
             },
             error,
         );
     }
 
-    fn start_course(&self, from: u64, course_id: CourseId, error: bool) {
-        self.send_tx(from, StudentNftAction::StartCourse { course_id }, error);
-    }
-
-    fn add_course_helper(&self, from: u64, course_id: CourseId, helper: u64, error: bool) {
-        self.send_tx(
-            from,
-            StudentNftAction::AddCourseHelper {
-                course_id,
-                helper: helper.into(),
-            },
-            error,
-        );
-    }
-
-    fn remove_course_helper(&self, from: u64, course_id: CourseId, helper: u64, error: bool) {
-        self.send_tx(
-            from,
-            StudentNftAction::RemoveCourseHelper {
-                course_id,
-                helper: helper.into(),
-            },
-            error,
-        );
-    }
-
-    fn add_lesson(&self, from: u64, course_id: CourseId, lesson: &Lesson, error: bool) {
-        self.send_tx(
-            from,
-            StudentNftAction::AddLesson {
-                course_id,
-                lesson: lesson.clone(),
-            },
-            error,
-        );
-    }
-
-    fn approve_hw(
+    fn update_metadata(
         &self,
         from: u64,
         nft_id: NftId,
-        course_id: CourseId,
-        lesson_id: LessonId,
-        solution_url: &str,
-        comment: Option<String>,
-        rate: u8,
+        maybe_media_url: Option<String>,
+        maybe_attrib_url: Option<String>,
         error: bool,
     ) {
-        self.send_tx(
+        self.send_student_nft_tx(
             from,
-            StudentNftAction::ApproveHw {
+            StudentNFTAction::UpdateMetadata {
                 nft_id,
-                course_id,
-                lesson_id,
-                solution_url: solution_url.to_owned(),
-                comment,
-                rate,
+                maybe_media_url,
+                maybe_attrib_url,
             },
             error,
         )
     }
 
-    fn add_lesson_review(
-        &self,
-        from: u64,
-        course_id: CourseId,
-        lesson_id: LessonId,
-        review: &str,
-        error: bool,
-    ) {
-        self.send_tx(
+    fn update_admin(&self, from: u64, admin: u64, command: UpdateAdminCommand, error: bool) {
+        self.send_student_nft_tx(
             from,
-            StudentNftAction::AddLessonReview {
-                course_id,
-                lesson_id,
-                review: review.to_owned(),
+            StudentNFTAction::UpdateAdmin {
+                admin: admin.into(),
+                command,
             },
             error,
         )
     }
 
-    fn emote(&self, from: u64, id: EmoteId, action: EmoteAction, error: bool) {
-        self.send_tx(from, StudentNftAction::Emote { id, action }, error);
-    }
-
-    fn complete_course(&self, from: u64, course_id: CourseId, error: bool) {
-        self.send_tx(from, StudentNftAction::CompleteCourse { course_id }, error);
-    }
-
-    fn finish_course(&self, from: u64, course_id: CourseId, error: bool) {
-        self.send_tx(from, StudentNftAction::FinishCourse { course_id }, error);
-    }
-
-    fn send_tx(&self, from: u64, action: StudentNftAction, error: bool) {
+    fn send_student_nft_tx(&self, from: u64, action: StudentNFTAction, error: bool) {
         let result = self.send(from, action);
         assert!(!result.main_failed());
 
         let maybe_error = result.log().iter().find_map(|log| {
             let mut payload = log.payload();
-            if let Ok(StudentNftEvent::Error(error)) = StudentNftEvent::decode(&mut payload) {
+            if let Ok(StudentNFTEvent::Error(error)) = StudentNFTEvent::decode(&mut payload) {
                 Some(error)
             } else {
                 None
@@ -173,7 +112,7 @@ impl StudentNft for Program<'_> {
         assert_eq!(maybe_error.is_some(), error);
     }
 
-    fn get_state(&self) -> StudentNftState {
+    fn get_state(&self) -> StudentNFTState {
         self.read_state().expect("Unexpected invalid state.")
     }
 }

@@ -1,15 +1,23 @@
 use super::common;
 use gclient::{EventProcessor, GearApi};
 use gstd::{prelude::*, ActorId};
-use student_nft_io::{StudentNftAction, StudentNftEvent, StudentNftInit, StudentNftState};
+use student_nft_io::{
+    Collection, StudentNFTAction, StudentNFTEvent, StudentNFTInit, StudentNFTState,
+};
 
 const STUDENT_NFT_WASM_PATH: &str = "./target/wasm32-unknown-unknown/debug/student_nft.opt.wasm";
 
-pub async fn init(api: &GearApi) -> gclient::Result<ActorId> {
+pub async fn init(api: &GearApi, name: &str, description: &str) -> gclient::Result<ActorId> {
     let mut listener = api.subscribe().await?;
     assert!(listener.blocks_running().await?);
 
-    let student_nft_init = StudentNftInit {}.encode();
+    let student_nft_init = StudentNFTInit {
+        collection: Collection {
+            name: name.to_owned(),
+            description: description.to_owned(),
+        },
+    }
+    .encode();
 
     let gas_info = api
         .calculate_upload_gas(
@@ -40,14 +48,33 @@ pub async fn init(api: &GearApi) -> gclient::Result<ActorId> {
     Ok(program_id.into())
 }
 
-pub async fn mint(api: &GearApi, program_id: &ActorId, error: bool) -> gclient::Result<()> {
-    let result = send_message(api, program_id, StudentNftAction::Mint, 0).await?;
-    assert_eq!(matches!(result, StudentNftEvent::Error(_)), error);
+pub async fn mint(
+    api: &GearApi,
+    program_id: &ActorId,
+    name: &str,
+    description: &str,
+    media_url: &str,
+    attrib_url: &str,
+    error: bool,
+) -> gclient::Result<()> {
+    let result = send_message(
+        api,
+        program_id,
+        StudentNFTAction::Mint {
+            name: name.to_owned(),
+            description: description.to_owned(),
+            media_url: media_url.to_owned(),
+            attrib_url: attrib_url.to_owned(),
+        },
+        0,
+    )
+    .await?;
+    assert_eq!(matches!(result, StudentNFTEvent::Error(_)), error);
 
     Ok(())
 }
 
-pub async fn get_state(api: &GearApi, program_id: &ActorId) -> gclient::Result<StudentNftState> {
+pub async fn get_state(api: &GearApi, program_id: &ActorId) -> gclient::Result<StudentNFTState> {
     let program_id = program_id.encode().as_slice().into();
     api.read_state(program_id).await
 }
@@ -55,9 +82,9 @@ pub async fn get_state(api: &GearApi, program_id: &ActorId) -> gclient::Result<S
 async fn send_message(
     api: &GearApi,
     program_id: &ActorId,
-    payload: StudentNftAction,
+    payload: StudentNFTAction,
     value: u128,
-) -> gclient::Result<StudentNftEvent> {
+) -> gclient::Result<StudentNFTEvent> {
     let mut listener = api.subscribe().await?;
 
     let program_id: common::Hash = program_id
@@ -76,5 +103,5 @@ async fn send_message(
     let (_, reply_data_result, _) = listener.reply_bytes_on(message_id).await?;
     let reply_data = reply_data_result.expect("Unexpected invalid reply data result.");
 
-    Ok(StudentNftEvent::decode(&mut reply_data.as_ref())?)
+    Ok(StudentNFTEvent::decode(&mut reply_data.as_ref())?)
 }

@@ -2,6 +2,7 @@ mod utils;
 
 use gstd::prelude::*;
 use gtest::{Program, System};
+use student_nft_io::UpdateAdminCommand;
 use utils::student_nft::StudentNFTMock;
 
 #[test]
@@ -10,16 +11,8 @@ fn success() {
     system.init_logger();
 
     let user = utils::USERS[0];
-    let user_id = user.into();
 
     let student_nft = Program::student_nft(&system, "TST".to_owned(), "Test gNFT".to_owned());
-    let state = student_nft.get_state();
-
-    assert!(state.tokens.is_empty());
-    assert!(state.owners.is_empty());
-    assert!(!state.admins.is_empty());
-    assert_eq!(state.nonce, 0);
-
     student_nft.mint(
         user,
         "".to_owned(),
@@ -29,23 +22,23 @@ fn success() {
         false,
     );
 
+    student_nft.update_admin(utils::ADMIN, user, UpdateAdminCommand::Add, false);
     let state = student_nft.get_state();
+    assert_eq!(state.admins.len(), 2);
 
-    assert!(!state.tokens.is_empty());
-    assert!(!state.owners.is_empty());
-    assert_eq!(state.nonce, 1);
-    assert_eq!(state.owners[0], (user_id, 1));
+    student_nft.update_admin(user, utils::ADMIN, UpdateAdminCommand::Remove, false);
+    let state = student_nft.get_state();
+    assert_eq!(state.admins.len(), 1);
 }
 
 #[test]
-fn fail_user_already_has_nft() {
+fn fail_only_admin_can_update() {
     let system = System::new();
     system.init_logger();
 
     let user = utils::USERS[0];
 
     let student_nft = Program::student_nft(&system, "TST".to_owned(), "Test gNFT".to_owned());
-
     student_nft.mint(
         user,
         "".to_owned(),
@@ -54,12 +47,6 @@ fn fail_user_already_has_nft() {
         "".to_owned(),
         false,
     );
-    student_nft.mint(
-        user,
-        "".to_owned(),
-        "".to_owned(),
-        "".to_owned(),
-        "".to_owned(),
-        true,
-    );
+
+    student_nft.update_admin(user, user, UpdateAdminCommand::Add, true);
 }

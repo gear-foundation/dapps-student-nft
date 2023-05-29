@@ -10,16 +10,8 @@ fn success() {
     system.init_logger();
 
     let user = utils::USERS[0];
-    let user_id = user.into();
 
     let student_nft = Program::student_nft(&system, "TST".to_owned(), "Test gNFT".to_owned());
-    let state = student_nft.get_state();
-
-    assert!(state.tokens.is_empty());
-    assert!(state.owners.is_empty());
-    assert!(!state.admins.is_empty());
-    assert_eq!(state.nonce, 0);
-
     student_nft.mint(
         user,
         "".to_owned(),
@@ -29,23 +21,23 @@ fn success() {
         false,
     );
 
+    student_nft.update_metadata(utils::ADMIN, 1, Some("1".to_owned()), None, false);
     let state = student_nft.get_state();
+    assert_eq!(state.tokens[0].1.media_url, "1".to_owned());
 
-    assert!(!state.tokens.is_empty());
-    assert!(!state.owners.is_empty());
-    assert_eq!(state.nonce, 1);
-    assert_eq!(state.owners[0], (user_id, 1));
+    student_nft.update_metadata(utils::ADMIN, 1, None, Some("2".to_owned()), false);
+    let state = student_nft.get_state();
+    assert_eq!(state.tokens[0].1.attrib_url, "2".to_owned());
 }
 
 #[test]
-fn fail_user_already_has_nft() {
+fn fail_invalid_nft_id() {
     let system = System::new();
     system.init_logger();
 
     let user = utils::USERS[0];
 
     let student_nft = Program::student_nft(&system, "TST".to_owned(), "Test gNFT".to_owned());
-
     student_nft.mint(
         user,
         "".to_owned(),
@@ -54,12 +46,26 @@ fn fail_user_already_has_nft() {
         "".to_owned(),
         false,
     );
+
+    student_nft.update_metadata(utils::ADMIN, 1337, Some("1".to_owned()), None, true);
+}
+
+#[test]
+fn fail_only_admin_can_update() {
+    let system = System::new();
+    system.init_logger();
+
+    let user = utils::USERS[0];
+
+    let student_nft = Program::student_nft(&system, "TST".to_owned(), "Test gNFT".to_owned());
     student_nft.mint(
         user,
         "".to_owned(),
         "".to_owned(),
         "".to_owned(),
         "".to_owned(),
-        true,
+        false,
     );
+
+    student_nft.update_metadata(user, 1, Some("1".to_owned()), None, true);
 }
