@@ -31,6 +31,26 @@ fn success() {
 }
 
 #[test]
+fn fail_metadata_is_empty() {
+    let system = System::new();
+    system.init_logger();
+
+    let user = utils::USERS[0];
+
+    let student_nft = Program::student_nft(&system, "TST".to_owned(), "Test gNFT".to_owned());
+    student_nft.mint(
+        user,
+        "".to_owned(),
+        "".to_owned(),
+        "".to_owned(),
+        "".to_owned(),
+        false,
+    );
+
+    student_nft.update_metadata(utils::ADMIN, 1, None, None, true);
+}
+
+#[test]
 fn fail_invalid_nft_id() {
     let system = System::new();
     system.init_logger();

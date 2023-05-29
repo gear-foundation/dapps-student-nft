@@ -75,6 +75,10 @@ fn process_update_metadata(
             return StudentNFTEvent::Error("Invalid nft id.".to_owned());
         };
 
+        if maybe_media_url.is_none() && maybe_attrib_url.is_none() {
+            return StudentNFTEvent::Error("Metadata is empty.".to_owned());
+        }
+
         if let Some(media_url) = maybe_media_url.clone() {
             nft.media_url = media_url;
         }
