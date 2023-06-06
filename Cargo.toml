@@ -9,7 +9,7 @@ authors = ["Gear Technologies"]
 student-nft-io = { path = "io" }
 gstd = { git = "https://github.com/gear-tech/gear.git", rev = "5c685d0" }
 gmeta = { git = "https://github.com/gear-tech/gear.git", rev = "5c685d0" }
-hashbrown = "0.13"
+hashbrown = "0.14"
 
 [build-dependencies]
 student-nft-io = { path = "io" }
