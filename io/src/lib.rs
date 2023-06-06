@@ -35,6 +35,13 @@ pub enum StudentNFTAction {
         media_url: String,
         attrib_url: String,
     },
+    MintTo {
+        user: ActorId,
+        name: String,
+        description: String,
+        media_url: String,
+        attrib_url: String,
+    },
     UpdateMetadata {
         nft_id: NftId,
         maybe_media_url: Option<String>,

@@ -17,6 +17,17 @@ pub trait StudentNFTMock {
         attrib_url: String,
         error: bool,
     );
+    #[allow(clippy::too_many_arguments)]
+    fn mint_to(
+        &self,
+        from: u64,
+        user: u64,
+        name: String,
+        description: String,
+        media_url: String,
+        attrib_url: String,
+        error: bool,
+    );
     fn update_metadata(
         &self,
         from: u64,
@@ -57,6 +68,29 @@ impl StudentNFTMock for Program<'_> {
         self.send_student_nft_tx(
             from,
             StudentNFTAction::Mint {
+                name,
+                description,
+                media_url,
+                attrib_url,
+            },
+            error,
+        );
+    }
+
+    fn mint_to(
+        &self,
+        from: u64,
+        user: u64,
+        name: String,
+        description: String,
+        media_url: String,
+        attrib_url: String,
+        error: bool,
+    ) {
+        self.send_student_nft_tx(
+            from,
+            StudentNFTAction::MintTo {
+                user: user.into(),
                 name,
                 description,
                 media_url,
