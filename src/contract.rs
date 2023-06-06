@@ -160,19 +160,12 @@ extern "C" fn handle() {
             attrib_url,
         ),
         StudentNFTAction::MintTo {
-            user,
+            to,
             name,
             description,
             media_url,
             attrib_url,
-        } => process_mint(
-            nft_contract,
-            &user,
-            name,
-            description,
-            media_url,
-            attrib_url,
-        ),
+        } => process_mint(nft_contract, &to, name, description, media_url, attrib_url),
         StudentNFTAction::UpdateMetadata {
             nft_id,
             maybe_media_url,

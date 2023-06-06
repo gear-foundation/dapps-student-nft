@@ -36,7 +36,7 @@ pub enum StudentNFTAction {
         attrib_url: String,
     },
     MintTo {
-        user: ActorId,
+        to: ActorId,
         name: String,
         description: String,
         media_url: String,

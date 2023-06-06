@@ -21,7 +21,7 @@ pub trait StudentNFTMock {
     fn mint_to(
         &self,
         from: u64,
-        user: u64,
+        to: u64,
         name: String,
         description: String,
         media_url: String,
@@ -80,7 +80,7 @@ impl StudentNFTMock for Program<'_> {
     fn mint_to(
         &self,
         from: u64,
-        user: u64,
+        to: u64,
         name: String,
         description: String,
         media_url: String,
@@ -90,7 +90,7 @@ impl StudentNFTMock for Program<'_> {
         self.send_student_nft_tx(
             from,
             StudentNFTAction::MintTo {
-                user: user.into(),
+                to: to.into(),
                 name,
                 description,
                 media_url,
