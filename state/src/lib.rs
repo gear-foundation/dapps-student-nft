@@ -11,19 +11,19 @@ include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 pub mod metafns {
     pub type State = <ContractMetadata as Metadata>::State;
 
-    pub fn get_nfts(state: State) -> Vec<(NftId, Nft)> {
-        state.nfts
+    pub fn get_tokens(state: State) -> Vec<(NftId, Nft)> {
+        state.tokens
     }
 
-    pub fn get_nft_owners(state: State) -> Vec<(ActorId, NftId)> {
-        state.nft_owners
+    pub fn get_owners(state: State) -> Vec<(ActorId, NftId)> {
+        state.owners
     }
 
-    pub fn get_courses(state: State) -> Vec<(CourseId, Course)> {
-        state.courses
+    pub fn get_admins(state: State) -> Vec<ActorId> {
+        state.admins
     }
 
-    pub fn get_emotes(state: State) -> Vec<(EmoteId, EmoteState)> {
-        state.emotes
+    pub fn get_collection(state: State) -> Collection {
+        state.collection
     }
 }

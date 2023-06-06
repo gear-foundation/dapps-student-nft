@@ -30,7 +30,7 @@ pub async fn fund_users(api: &GearApi) -> gclient::Result<()> {
     Ok(())
 }
 
-pub async fn init(api: &GearApi) -> gclient::Result<ActorId> {
+pub async fn init(api: &GearApi, name: &str, description: &str) -> gclient::Result<ActorId> {
     fund_users(api).await?;
-    student_nft::init(api).await
+    student_nft::init(api, name, description).await
 }
