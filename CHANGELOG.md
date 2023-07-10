@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/gear-dapps/student-nft/compare/0.2.1...HEAD
-[0.2.1]: https://github.com/gear-dapps/student-nft/compare/0.2.0...0.2.1
-[0.2.0]: https://github.com/gear-dapps/student-nft/compare/0.1.0...0.2.0
-[0.1.0]: https://github.com/gear-dapps/student-nft/compare/8b01ff3...0.1.0
+[Unreleased]: https://github.com/gear-foundation/dapps-student-nft/compare/0.2.1...HEAD
+[0.2.1]: https://github.com/gear-foundation/dapps-student-nft/compare/0.2.0...0.2.1
+[0.2.0]: https://github.com/gear-foundation/dapps-student-nft/compare/0.1.0...0.2.0
+[0.1.0]: https://github.com/gear-foundation/dapps-student-nft/compare/8b01ff3...0.1.0
