@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["EmoteAction","StudentNftAction","StudentNftEvent"],"struct":["ActualCourse","ContractMetadata","Course","EmoteState","Hw","Lesson","Nft","StudentNftInit","StudentNftState"],"type":["CourseId","EmoteId","LessonId","NftId"]};

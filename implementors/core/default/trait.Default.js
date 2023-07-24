@@ -1,0 +1,3 @@
+(function() {var implementors = {
+"student_nft":[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/default/trait.Default.html\" title=\"trait core::default::Default\">Default</a> for <a class=\"struct\" href=\"student_nft/contract/struct.Emote.html\" title=\"struct student_nft::contract::Emote\">Emote</a>"]]
+};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
